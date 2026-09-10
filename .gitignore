@@ -1,0 +1,22 @@
+# Root .gitignore for MONOLITH
+
+# Environment & Credentials
+.env
+.env.*
+!.env.example
+application-local.properties
+application-*.properties
+!**/src/main/resources/application.properties
+
+# Build outputs
+target/
+dist/
+build/
+node_modules/
+
+# IDE & OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

@@ -1,0 +1,93 @@
+package edu.cit.quizana.inventory;
+
+import edu.cit.quizana.inventory.dto.InventoryItemDto;
+import edu.cit.quizana.inventory.dto.ReservationResult;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+/**
+ * Package-private implementation of InventoryService.
+ * Enforces architectural boundary: outside packages (such as shop) can only
+ * access the public InventoryService interface.
+ */
+@Service
+@Transactional
+class InventoryServiceImpl implements InventoryService {
+
+    private final InventoryRepository inventoryRepository;
+
+    InventoryServiceImpl(InventoryRepository inventoryRepository) {
+        this.inventoryRepository = inventoryRepository;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public InventoryItemDto getItem(String productId) {
+        return inventoryRepository.findById(productId)
+                .map(this::toDto)
+                .orElse(null);
+    }
+
+    @Override
+    public ReservationResult reserve(String productId, int quantity) {
+        if (quantity <= 0) {
+            return ReservationResult.builder()
+                    .success(false)
+                    .message("Quantity must be greater than zero.")
+                    .remainingStock(getItemStockOrZero(productId))
+                    .build();
+        }
+
+        Optional<InventoryItem> optionalItem = inventoryRepository.findById(productId);
+        if (optionalItem.isEmpty()) {
+            return ReservationResult.builder()
+                    .success(false)
+                    .message(String.format("Product with ID '%s' not found.", productId))
+                    .remainingStock(0)
+                    .build();
+        }
+
+        InventoryItem item = optionalItem.get();
+        if (item.getStock() < quantity) {
+            return ReservationResult.builder()
+                    .success(false)
+                    .message(String.format("Insufficient stock for %s (%s): requested %d, available %d",
+                            item.getName(), productId, quantity, item.getStock()))
+                    .remainingStock(item.getStock())
+                    .build();
+        }
+
+        // Deduct stock and persist
+        item.setStock(item.getStock() - quantity);
+        inventoryRepository.save(item);
+
+        return ReservationResult.builder()
+                .success(true)
+                .message(String.format("Successfully reserved %d unit(s) of %s (%s).",
+                        quantity, item.getName(), productId))
+                .remainingStock(item.getStock())
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<InventoryItemDto> getAllItems() {
+        return inventoryRepository.findAll().stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    private InventoryItemDto toDto(InventoryItem item) {
+        return new InventoryItemDto(item.getProductId(), item.getName(), item.getStock());
+    }
+
+    private int getItemStockOrZero(String productId) {
+        return inventoryRepository.findById(productId)
+                .map(InventoryItem::getStock)
+                .orElse(0);
+    }
+}
