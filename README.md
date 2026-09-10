@@ -113,42 +113,23 @@ A full-stack e-commerce ordering system built with **Spring Boot 3**, **PostgreS
 ---
 
 ## 3. Architectural Reflection
+1. In-Process Integration vs. Network-Separated Microservices
 
-### 1. In-Process Integration vs. Network-Separated Microservices
-Integrating `Order` and `Inventory` in-process within a modular monolith gives you several critical capabilities **for free**:
-- **ACID Transactions**: A single database transaction boundary (`@Transactional`) spans both stock reservation and order creation, guaranteeing atomic commits with zero distributed locking overhead.
-- **Sub-Millisecond Latency & High Throughput**: Method invocations occur within the JVM memory space without network latency, serialization/deserialization penalties, or connection pooling bottlenecks.
-- **Zero Partial Failure Modes**: There is no risk of network timeouts, DNS resolution failures, or dropped packets midway through an order.
+Integrating the Order and Inventory modules in-process within a modular monolith provides several important capabilities without requiring additional infrastructure. First, ACID transactions allow a single database transaction boundary, such as one managed by @Transactional, to cover both stock reservation and order creation. This guarantees that both operations are committed atomically, without the overhead of distributed locking. In addition, in-process communication provides sub-millisecond latency and high throughput because method invocations occur directly within the JVM's memory space, avoiding network latency, serialization and deserialization costs, and connection-pooling bottlenecks. It also eliminates partial failure scenarios that can occur over a network, such as timeouts, DNS failures, or dropped packets during an order transaction.
 
-If split into separate microservices over HTTP/gRPC, you would need to add back:
-- **Distributed Consistency Patterns**: Implementing the **Saga pattern** (orchestrated or choreographed) with compensating transactions to undo reserved stock if order placement fails downstream.
-- **Network Resilience**: Circuit breakers (e.g. Resilience4j), exponential backoff retries, and dead-letter queues.
-- **Asynchronous Messaging**: Message brokers (RabbitMQ/Kafka) for eventual consistency, alongside distributed tracing (OpenTelemetry) and API gateway routing.
+If the Order and Inventory modules were instead separated into independent microservices communicating through HTTP or gRPC, several additional mechanisms would be required. Distributed consistency patterns, such as the Saga pattern, would need to be implemented using either orchestration or choreography, along with compensating transactions to reverse a stock reservation if order placement fails downstream. Network resilience would also become important, requiring mechanisms such as circuit breakers, exponential backoff retries, and dead-letter queues. Furthermore, asynchronous messaging through systems such as RabbitMQ or Kafka could be necessary to support eventual consistency, while distributed tracing through tools such as OpenTelemetry and API gateway routing would help monitor and manage communication between the services. Therefore, while microservices provide greater independence and scalability, they also introduce significant distributed-system complexity that is avoided when the modules remain integrated within the same application process.
 
----
+2. Importance of Package-Private Visibility on InventoryServiceImpl
 
-### 2. Importance of Package-Private Visibility on `InventoryServiceImpl`
-Declaring `InventoryServiceImpl` as package-private (`class InventoryServiceImpl implements InventoryService`) enforces a strict compile-time boundary. 
+Declaring InventoryServiceImpl as package-private, as in class InventoryServiceImpl implements InventoryService, establishes a strict compile-time architectural boundary. This ensures that other modules can interact with the Inventory functionality only through the InventoryService interface rather than directly accessing its concrete implementation. If InventoryServiceImpl were made public, developers working in packages such as edu.cit.quizana.shop could directly instantiate or inject the concrete class, creating tighter coupling between the Order module and the internal implementation details of Inventory. This could expose details such as direct repository queries, internal helper methods, or implementation-specific state that should remain encapsulated within the Inventory module.
 
-If `InventoryServiceImpl` were made `public`:
-- **Architectural Erosion**: Developers working in `edu.cit.quizana.shop` could directly inject or instantiate the concrete class instead of the interface, coupling the Order module to internal implementation details (such as direct repository queries or internal helper state).
-- **Broken Encapsulation**: Callers could bypass business invariants and validation rules exposed only by interface methods.
-- **Refactoring Resistance**: Modifying or replacing the inventory implementation (e.g. swapping JPA for Redis caching or a remote REST client) would break dependent classes across the codebase. Package-private visibility prevents this by allowing access strictly through the contract defined by `InventoryService`.
+Making the implementation public could also lead to broken encapsulation because callers might bypass business invariants and validation rules that are intended to be enforced through the service interface. It would also make future refactoring more difficult. For example, if the inventory implementation were changed from JPA to Redis caching or eventually replaced with a remote REST client, classes that directly depended on InventoryServiceImpl could break across the codebase. By keeping the implementation package-private, the system ensures that other modules depend only on the stable contract defined by InventoryService, making the architecture more maintainable and resistant to implementation changes.
 
----
+3. When to Extract Inventory into a Microservice and Required Code Changes
 
-### 3. When to Extract Inventory into a Microservice & Required Code Changes
-**When to Extract**:
-- **Independent Scaling**: If inventory reads (e.g. high-traffic catalog lookups, warehouse barcode scanners, third-party marketplace syncs) drastically outpace order placements and require distinct auto-scaling policies.
-- **Organizational Boundaries**: When separate engineering teams own and deploy the inventory domain independently of the checkout/ordering domain.
+The Inventory module should be considered for extraction into a separate microservice when there is a clear architectural or operational reason to do so. One such reason is independent scaling. For example, inventory-related operations such as high-traffic catalog lookups, warehouse barcode scanning, or synchronization with third-party marketplaces may generate significantly more traffic than order placement. In this situation, separating Inventory would allow it to have its own scaling and deployment policies. Another reason is the establishment of organizational boundaries, particularly when separate engineering teams are responsible for the Inventory and Order domains and need to develop, deploy, and maintain them independently.
 
-**Required Code Changes**:
-1. **Zero Changes to `OrderService` Core Logic**: Because `OrderService` depends exclusively on the `InventoryService` interface, its business logic remains untouched.
-2. **Implement an HTTP Client**: Create a new `InventoryClient` implementing `InventoryService` that uses Spring's `RestClient` / `WebClient` to invoke the remote Inventory microservice endpoint over HTTP/REST.
-3. **Database Decoupling**: Separate the shared database into dedicated schemas or distinct PostgreSQL databases (`order_db` and `inventory_db`).
-4. **Remove Local Module**: Remove `edu.cit.quizana.inventory` from the monolith build artifact.
-
----
+If Inventory were extracted into a microservice, the core business logic of OrderService would require little or no modification because it already depends on the InventoryService interface rather than the concrete InventoryServiceImpl. Instead, a new implementation, such as an InventoryClient, could implement InventoryService and use Spring's RestClient or WebClient to communicate with the remote Inventory service through HTTP or REST. The database would also need to be decoupled so that the Order and Inventory services no longer share the same database. This could involve using separate schemas or distinct PostgreSQL databases, such as order_db and inventory_db. Finally, the local edu.cit.quizana.inventory module would be removed from the monolithic build artifact, with its functionality being provided by the newly deployed Inventory microservice. This approach demonstrates the advantage of designing the monolith with clear module boundaries: because OrderService depends on an interface rather than an implementation, the Inventory module can be extracted with significantly less impact on the existing Order business logic.
 
 ## 4. How to Run
 
