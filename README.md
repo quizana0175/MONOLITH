@@ -35,6 +35,8 @@ A full-stack e-commerce ordering system built with **Spring Boot 3**, **PostgreS
 ## 2. Network Tab Evidence (Confirmed + Rejected Orders)
 
 ### A. Confirmed Order Path (Stock Available)
+<img width="1917" height="1028" alt="image" src="https://github.com/user-attachments/assets/c0defe4d-6527-4305-b222-24ce623fb2f2" />
+
 - **Request**: `POST http://localhost:8080/api/orders`
   ```json
   {
@@ -60,6 +62,8 @@ A full-stack e-commerce ordering system built with **Spring Boot 3**, **PostgreS
 ---
 
 ### B. Rejected Order Path (Insufficient Stock)
+<img width="1917" height="1030" alt="image" src="https://github.com/user-attachments/assets/11c20910-9b53-4fba-8681-2d239f0734e4" />
+
 - **Request**: `POST http://localhost:8080/api/orders`
   ```json
   {
