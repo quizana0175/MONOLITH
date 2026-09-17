@@ -7,6 +7,20 @@ A full-stack modular monolith e-commerce system built with **Spring Boot 3**, **
 4. **Architectural Encapsulation**: Strict package-private implementations (`InventoryServiceImpl`, `NotificationEventListener`) preventing direct cross-module leakage.
 
 ---
+### Network tab evidence
+# A multi-item order where all items succeed (CONFIRMED)
+<img width="1910" height="989" alt="image" src="https://github.com/user-attachments/assets/5cb1f062-39bc-429d-b660-c9e95d491cec" />
+
+# A multi-item order where one item fails and the whole order is REJECTED with no partial reservation
+<img width="1915" height="984" alt="image" src="https://github.com/user-attachments/assets/a26eff25-9336-4f25-be54-3940ff3ded03" />
+
+# A cancel with restock reflected in GET /api/inventory afterward
+<img width="1913" height="988" alt="image" src="https://github.com/user-attachments/assets/c140ce9d-7784-401e-b67a-c3ecd93602e8" />
+<img width="1918" height="992" alt="image" src="https://github.com/user-attachments/assets/92bd05fc-0ae8-4921-a3d0-b3ad6a7b5b69" />
+
+# The notification feed showing a confirmed order, a rejected order, and a low-stock alert
+
+<img width="1918" height="984" alt="image" src="https://github.com/user-attachments/assets/0b7c68f8-cdb0-4226-8b3f-4ca4cead1b5c" />
 
 ## 1. Modular Architecture & Package Structure
 
