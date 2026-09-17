@@ -1,22 +1,41 @@
 package edu.cit.quizana.shop.dto;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class OrderRequest {
 
-    @NotBlank(message = "Product ID is required.")
-    private String productId;
+    @Valid
+    private List<OrderItemRequest> items = new ArrayList<>();
 
-    @Min(value = 1, message = "Quantity must be at least 1.")
-    private int quantity;
+    // Backward compatibility fields for single-item order requests
+    private String productId;
+    private Integer quantity;
 
     public OrderRequest() {
+    }
+
+    public OrderRequest(List<OrderItemRequest> items) {
+        this.items = items != null ? items : new ArrayList<>();
     }
 
     public OrderRequest(String productId, int quantity) {
         this.productId = productId;
         this.quantity = quantity;
+        this.items = List.of(new OrderItemRequest(productId, quantity));
+    }
+
+    public List<OrderItemRequest> getItems() {
+        if ((items == null || items.isEmpty()) && productId != null && quantity != null) {
+            return List.of(new OrderItemRequest(productId, quantity));
+        }
+        return items != null ? items : new ArrayList<>();
+    }
+
+    public void setItems(List<OrderItemRequest> items) {
+        this.items = items;
     }
 
     public String getProductId() {
@@ -27,11 +46,12 @@ public class OrderRequest {
         this.productId = productId;
     }
 
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 }
+

@@ -3,26 +3,26 @@ package edu.cit.quizana.shop.dto;
 import edu.cit.quizana.shop.OrderStatus;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OrderResponse {
 
     private String orderId;
-    private String productId;
-    private int quantity;
     private OrderStatus status;
     private String reason;
-    private int inventory;
+    private List<OrderItemOutcomeDto> items = new ArrayList<>();
+    private Object inventory;
     private LocalDateTime createdAt;
 
     public OrderResponse() {
     }
 
-    public OrderResponse(String orderId, String productId, int quantity, OrderStatus status, String reason, int inventory, LocalDateTime createdAt) {
+    public OrderResponse(String orderId, OrderStatus status, String reason, List<OrderItemOutcomeDto> items, Object inventory, LocalDateTime createdAt) {
         this.orderId = orderId;
-        this.productId = productId;
-        this.quantity = quantity;
         this.status = status;
         this.reason = reason;
+        this.items = items != null ? items : new ArrayList<>();
         this.inventory = inventory;
         this.createdAt = createdAt;
     }
@@ -33,25 +33,14 @@ public class OrderResponse {
 
     public static class Builder {
         private String orderId;
-        private String productId;
-        private int quantity;
         private OrderStatus status;
         private String reason;
-        private int inventory;
+        private List<OrderItemOutcomeDto> items = new ArrayList<>();
+        private Object inventory;
         private LocalDateTime createdAt;
 
         public Builder orderId(String orderId) {
             this.orderId = orderId;
-            return this;
-        }
-
-        public Builder productId(String productId) {
-            this.productId = productId;
-            return this;
-        }
-
-        public Builder quantity(int quantity) {
-            this.quantity = quantity;
             return this;
         }
 
@@ -65,7 +54,17 @@ public class OrderResponse {
             return this;
         }
 
-        public Builder inventory(int inventory) {
+        public Builder items(List<OrderItemOutcomeDto> items) {
+            this.items = items != null ? new ArrayList<>(items) : new ArrayList<>();
+            return this;
+        }
+
+        public Builder addItem(OrderItemOutcomeDto item) {
+            this.items.add(item);
+            return this;
+        }
+
+        public Builder inventory(Object inventory) {
             this.inventory = inventory;
             return this;
         }
@@ -76,7 +75,7 @@ public class OrderResponse {
         }
 
         public OrderResponse build() {
-            return new OrderResponse(orderId, productId, quantity, status, reason, inventory, createdAt);
+            return new OrderResponse(orderId, status, reason, items, inventory, createdAt);
         }
     }
 
@@ -86,22 +85,6 @@ public class OrderResponse {
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
-    }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public void setProductId(String productId) {
-        this.productId = productId;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
     }
 
     public OrderStatus getStatus() {
@@ -120,11 +103,19 @@ public class OrderResponse {
         this.reason = reason;
     }
 
-    public int getInventory() {
+    public List<OrderItemOutcomeDto> getItems() {
+        return items;
+    }
+
+    public void setItems(List<OrderItemOutcomeDto> items) {
+        this.items = items;
+    }
+
+    public Object getInventory() {
         return inventory;
     }
 
-    public void setInventory(int inventory) {
+    public void setInventory(Object inventory) {
         this.inventory = inventory;
     }
 
@@ -135,4 +126,14 @@ public class OrderResponse {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    // Backward compatibility helper methods
+    public String getProductId() {
+        return (items != null && !items.isEmpty()) ? items.get(0).getProductId() : null;
+    }
+
+    public Integer getQuantity() {
+        return (items != null && !items.isEmpty()) ? items.get(0).getQuantity() : null;
+    }
 }
+

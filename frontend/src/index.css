@@ -433,6 +433,68 @@ body {
   font-size: 0.7rem;
 }
 
+.pill-cancelled {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+
+.result-banner.cancelled {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+  border: 1px solid #cbd5e1;
+  border-left: 5px solid #64748b;
+}
+
+.btn-refresh {
+  background: none;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.btn-refresh:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+.btn-add-cart:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.inventory-item.low-stock-card {
+  border-color: #fde68a;
+  background-color: #fffbeb;
+}
+
+.inventory-item.low-stock-card:hover {
+  border-color: #d97706;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.12);
+}
+
+.inventory-item.out-of-stock-card {
+  border-color: #fecaca;
+  background-color: #fef2f2;
+}
+
+.inventory-item.out-of-stock-card:hover {
+  border-color: #dc2626;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.12);
+}
+
 .spinner {
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-left-color: #ffffff;
@@ -445,3 +507,4 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+

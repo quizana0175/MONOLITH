@@ -25,8 +25,8 @@ public class OrderController {
 
     /**
      * POST /api/orders
-     * Request: { "productId": "P100", "quantity": 2 }
-     * Response: { "orderId": "...", "productId": "P100", "quantity": 2, "status": "CONFIRMED", "reason": null, "inventory": 23, "createdAt": "..." }
+     * Accepts: { "items": [ { "productId": "P100", "quantity": 2 }, ... ] }
+     * Or single item legacy format.
      */
     @PostMapping("/orders")
     public ResponseEntity<OrderResponse> placeOrder(@Valid @RequestBody OrderRequest request) {
@@ -35,8 +35,18 @@ public class OrderController {
     }
 
     /**
+     * POST /api/orders/{orderId}/cancel
+     * Sets order status to CANCELLED and restocks reserved inventory.
+     */
+    @PostMapping("/orders/{orderId}/cancel")
+    public ResponseEntity<OrderResponse> cancelOrder(@PathVariable String orderId) {
+        OrderResponse response = orderService.cancelOrder(orderId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * GET /api/inventory
-     * Returns list of inventory items for frontend dropdown and stock status.
+     * Returns list of inventory items with current stock.
      */
     @GetMapping("/inventory")
     public ResponseEntity<List<InventoryItemDto>> getInventory() {
@@ -46,7 +56,7 @@ public class OrderController {
 
     /**
      * GET /api/orders
-     * Returns order history.
+     * Returns order history with status and line items.
      */
     @GetMapping("/orders")
     public ResponseEntity<List<Order>> getOrders() {
@@ -54,3 +64,4 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 }
+

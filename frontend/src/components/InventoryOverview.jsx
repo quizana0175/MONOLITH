@@ -1,7 +1,13 @@
 import React from 'react';
-import { Package, RefreshCw } from 'lucide-react';
+import { Package, RefreshCw, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
 
-export default function InventoryOverview({ inventory, selectedProductId, onSelectProduct, onRefresh, loading }) {
+export default function InventoryOverview({ inventory, onAddToCart, onRefresh, loading }) {
+  const getCardStatusClass = (stock) => {
+    if (stock <= 0) return 'inventory-item out-of-stock-card';
+    if (stock <= 5) return 'inventory-item low-stock-card';
+    return 'inventory-item in-stock-card';
+  };
+
   const getBadgeClass = (stock) => {
     if (stock <= 0) return 'stock-badge out-of-stock';
     if (stock <= 5) return 'stock-badge low-stock';
@@ -19,21 +25,12 @@ export default function InventoryOverview({ inventory, selectedProductId, onSele
       <div className="card-title">
         <div className="card-title-text">
           <Package size={20} color="#059669" />
-          <span>Live Inventory</span>
+          <span>Inventory</span>
         </div>
         <button
           onClick={onRefresh}
           disabled={loading}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#9ca3af',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.25rem',
-            fontSize: '0.8rem',
-          }}
+          className="btn-refresh"
           title="Refresh inventory"
         >
           <RefreshCw size={14} className={loading ? 'spinner' : ''} />
@@ -43,22 +40,49 @@ export default function InventoryOverview({ inventory, selectedProductId, onSele
 
       <div className="inventory-grid">
         {inventory.map((item) => {
-          const isSelected = selectedProductId === item.productId;
+          const isLowStock = item.stock > 0 && item.stock <= 5;
+          const isOutOfStock = item.stock <= 0;
+
           return (
             <div
               key={item.productId}
-              className={`inventory-item ${isSelected ? 'selected' : ''}`}
-              onClick={() => onSelectProduct(item.productId)}
-              style={{ cursor: 'pointer' }}
+              className={getCardStatusClass(item.stock)}
             >
-              <div className="item-id">{item.productId}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="item-id">{item.productId}</span>
+                {isOutOfStock && <XCircle size={16} color="#dc2626" />}
+                {isLowStock && <AlertTriangle size={16} color="#d97706" />}
+                {!isLowStock && !isOutOfStock && <CheckCircle2 size={16} color="#059669" />}
+              </div>
               <div className="item-name">{item.name}</div>
               <div className="item-stock">
-                <span style={{ color: '#9ca3af' }}>Available:</span>
+                <span style={{ color: '#64748b' }}>Stock:</span>
                 <span className={getBadgeClass(item.stock)}>
                   {getBadgeText(item.stock)}
                 </span>
               </div>
+              {onAddToCart && (
+                <button
+                  type="button"
+                  onClick={() => onAddToCart(item.productId)}
+                  className="btn-add-cart"
+                  style={{
+                    marginTop: '0.75rem',
+                    width: '100%',
+                    padding: '0.4rem 0.6rem',
+                    fontSize: '0.75rem',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    background: '#f8fafc',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    color: '#334155',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  + Add to Cart
+                </button>
+              )}
             </div>
           );
         })}
@@ -66,3 +90,4 @@ export default function InventoryOverview({ inventory, selectedProductId, onSele
     </div>
   );
 }
+

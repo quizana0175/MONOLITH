@@ -19,6 +19,11 @@ public interface InventoryService {
     ReservationResult reserve(String productId, int quantity);
 
     /**
+     * Return reserved product quantity back to inventory upon order cancellation.
+     */
+    void restock(String productId, int quantity);
+
+    /**
      * Retrieve all inventory items (used by frontend dropdown/catalog).
      */
     List<InventoryItemDto> getAllItems();

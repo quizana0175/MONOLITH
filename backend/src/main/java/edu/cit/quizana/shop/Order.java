@@ -1,8 +1,11 @@
 package edu.cit.quizana.shop;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -12,11 +15,11 @@ public class Order {
     @Column(name = "order_id", length = 50, nullable = false)
     private String orderId;
 
-    @Column(name = "product_id", length = 50, nullable = false)
+    @Column(name = "product_id", length = 50, nullable = true)
     private String productId;
 
-    @Column(name = "quantity", nullable = false)
-    private int quantity;
+    @Column(name = "quantity", nullable = true)
+    private Integer quantity;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
@@ -28,16 +31,30 @@ public class Order {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonManagedReference
+    private List<OrderItem> items = new ArrayList<>();
+
     public Order() {
     }
 
-    public Order(String orderId, String productId, int quantity, OrderStatus status, String reason, LocalDateTime createdAt) {
+    public Order(String orderId, OrderStatus status, String reason, LocalDateTime createdAt, List<OrderItem> items) {
         this.orderId = orderId;
-        this.productId = productId;
-        this.quantity = quantity;
         this.status = status;
         this.reason = reason;
         this.createdAt = createdAt;
+        if (items != null) {
+            items.forEach(this::addItem);
+        }
+    }
+
+    public void addItem(OrderItem item) {
+        this.items.add(item);
+        item.setOrder(this);
+        if (this.productId == null) {
+            this.productId = item.getProductId();
+            this.quantity = item.getQuantity();
+        }
     }
 
     public static Builder builder() {
@@ -46,24 +63,13 @@ public class Order {
 
     public static class Builder {
         private String orderId;
-        private String productId;
-        private int quantity;
         private OrderStatus status;
         private String reason;
         private LocalDateTime createdAt;
+        private List<OrderItem> items = new ArrayList<>();
 
         public Builder orderId(String orderId) {
             this.orderId = orderId;
-            return this;
-        }
-
-        public Builder productId(String productId) {
-            this.productId = productId;
-            return this;
-        }
-
-        public Builder quantity(int quantity) {
-            this.quantity = quantity;
             return this;
         }
 
@@ -82,8 +88,26 @@ public class Order {
             return this;
         }
 
+        public Builder items(List<OrderItem> items) {
+            this.items = items != null ? new ArrayList<>(items) : new ArrayList<>();
+            return this;
+        }
+
+        public Builder addItem(OrderItem item) {
+            this.items.add(item);
+            return this;
+        }
+
         public Order build() {
-            return new Order(orderId, productId, quantity, status, reason, createdAt);
+            Order order = new Order();
+            order.setOrderId(this.orderId);
+            order.setStatus(this.status);
+            order.setReason(this.reason);
+            order.setCreatedAt(this.createdAt);
+            for (OrderItem item : this.items) {
+                order.addItem(item);
+            }
+            return order;
         }
     }
 
@@ -93,22 +117,6 @@ public class Order {
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
-    }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public void setProductId(String productId) {
-        this.productId = productId;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
     }
 
     public OrderStatus getStatus() {
@@ -134,4 +142,16 @@ public class Order {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    public List<OrderItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<OrderItem> items) {
+        this.items = new ArrayList<>();
+        if (items != null) {
+            items.forEach(this::addItem);
+        }
+    }
 }
+

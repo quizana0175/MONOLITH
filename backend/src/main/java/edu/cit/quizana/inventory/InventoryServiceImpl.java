@@ -2,9 +2,13 @@ package edu.cit.quizana.inventory;
 
 import edu.cit.quizana.inventory.dto.InventoryItemDto;
 import edu.cit.quizana.inventory.dto.ReservationResult;
+import edu.cit.quizana.inventory.event.LowStockEvent;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,10 +22,17 @@ import java.util.stream.Collectors;
 @Transactional
 class InventoryServiceImpl implements InventoryService {
 
-    private final InventoryRepository inventoryRepository;
+    private static final int DEFAULT_LOW_STOCK_THRESHOLD = 5;
 
-    InventoryServiceImpl(InventoryRepository inventoryRepository) {
+    private final InventoryRepository inventoryRepository;
+    private final ApplicationEventPublisher eventPublisher;
+
+    @Value("${inventory.low-stock-threshold:5}")
+    private int lowStockThreshold = DEFAULT_LOW_STOCK_THRESHOLD;
+
+    InventoryServiceImpl(InventoryRepository inventoryRepository, ApplicationEventPublisher eventPublisher) {
         this.inventoryRepository = inventoryRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -62,8 +73,20 @@ class InventoryServiceImpl implements InventoryService {
         }
 
         // Deduct stock and persist
-        item.setStock(item.getStock() - quantity);
+        int newStock = item.getStock() - quantity;
+        item.setStock(newStock);
         inventoryRepository.save(item);
+
+        // Check low-stock threshold rule and publish event
+        if (newStock <= lowStockThreshold) {
+            eventPublisher.publishEvent(new LowStockEvent(
+                    item.getProductId(),
+                    item.getName(),
+                    newStock,
+                    lowStockThreshold,
+                    LocalDateTime.now()
+            ));
+        }
 
         return ReservationResult.builder()
                 .success(true)
@@ -71,6 +94,18 @@ class InventoryServiceImpl implements InventoryService {
                         quantity, item.getName(), productId))
                 .remainingStock(item.getStock())
                 .build();
+    }
+
+    @Override
+    public void restock(String productId, int quantity) {
+        if (quantity <= 0) {
+            return;
+        }
+
+        inventoryRepository.findById(productId).ifPresent(item -> {
+            item.setStock(item.getStock() + quantity);
+            inventoryRepository.save(item);
+        });
     }
 
     @Override
@@ -91,3 +126,4 @@ class InventoryServiceImpl implements InventoryService {
                 .orElse(0);
     }
 }
+
