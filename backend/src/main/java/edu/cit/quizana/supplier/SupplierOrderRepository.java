@@ -1,0 +1,11 @@
+package edu.cit.quizana.supplier;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+import java.util.Optional;
+
+interface SupplierOrderRepository extends JpaRepository<SupplierOrder, String> {
+    Optional<SupplierOrder> findByBuyerRef(String buyerRef);
+    List<SupplierOrder> findByStatus(SupplierOrderStatus status);
+    List<SupplierOrder> findByStatusIn(List<SupplierOrderStatus> statuses);
+}

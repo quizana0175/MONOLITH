@@ -34,6 +34,19 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS supplier_orders (
+    id VARCHAR(50) PRIMARY KEY,
+    product_id VARCHAR(50) NOT NULL,
+    buyer_ref VARCHAR(50) NOT NULL UNIQUE,
+    request_id VARCHAR(50) NOT NULL,
+    po_number VARCHAR(50) NOT NULL,
+    cases INT NOT NULL,
+    units INT NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
 -- Seed initial inventory data
 INSERT INTO inventory (product_id, name, stock) VALUES
 ('P100', 'Wireless Mouse', 25),
