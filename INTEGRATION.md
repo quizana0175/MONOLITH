@@ -56,6 +56,7 @@ This table maps our internal inventory products to LegacySupply's specific suppl
 | **`E-RATE-03`** | 429 | Request quota exceeded | Triggered when polling too fast or bombarding the partner interface without pauses. |
 
 ---
+<img width="852" height="926" alt="image" src="https://github.com/user-attachments/assets/b81ee4c9-b881-40e0-90a1-819e621be69e" />
 
 ## 4. Qty and UoM (Unit of Measure) Explained
 
