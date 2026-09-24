@@ -91,7 +91,7 @@ class SupplierOrderPoller {
             case "20" -> SupplierOrderStatus.PICKING;
             case "30" -> SupplierOrderStatus.SHIPPED;
             case "40" -> SupplierOrderStatus.DELIVERED;
-            case "50", "99" -> SupplierOrderStatus.CANCELLED;
+            case "50", "90", "99" -> SupplierOrderStatus.CANCELLED;
             default -> {
                 log.warn("Unrecognized LegacySupply status code: {}", code);
                 yield SupplierOrderStatus.UNKNOWN;
